@@ -23,12 +23,17 @@
 # THE SOFTWARE.
 
 
+import re
 from ._util import Util, STUCK_TIMEOUT
 
 
 def additional_param():
-    return ["-t", "0", "-w", str(STUCK_TIMEOUT), "--random-wait", "-T", str(STUCK_TIMEOUT), "--passive-ftp"]
+    return ["-t", "0", "-w", str(STUCK_TIMEOUT), "--random-wait", "-T", str(STUCK_TIMEOUT)]
 
 
 def exec(*args):
-    Util.cmdExec("/usr/bin/wget", additional_param(), *args)
+    for x in args:
+        assert x != "--random-wait"
+        assert not re.fullmatch("(-t|--tries|-w|--wait|-T|--timetout)(=.*)?")
+
+    Util.cmdExec("/usr/bin/wget", *additional_param(), *args)
