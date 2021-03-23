@@ -25,13 +25,13 @@
 
 import time
 import subprocess
-from ._util import Util
+from ._util import Util, STUCK_TIMEOUT
 
 
 def additional_environ():
     return {
         "GIT_HTTP_LOW_SPEED_LIMIT": "1024",
-        "GIT_HTTP_LOW_SPEED_TIME": str(Util.STUCK_TIMEOUT),
+        "GIT_HTTP_LOW_SPEED_TIME": str(STUCK_TIMEOUT),
     }
 
 

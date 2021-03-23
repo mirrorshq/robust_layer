@@ -23,11 +23,11 @@
 # THE SOFTWARE.
 
 
-from ._util import Util
+from ._util import Util, STUCK_TIMEOUT
 
 
 def additional_param():
-    return ["-t", "0", "-w", str(Util.STUCK_TIMEOUT), "--random-wait", "-T", str(Util.STUCK_TIMEOUT), "--passive-ftp"]
+    return ["-t", "0", "-w", str(STUCK_TIMEOUT), "--random-wait", "-T", str(STUCK_TIMEOUT), "--passive-ftp"]
 
 
 def exec(*args):
