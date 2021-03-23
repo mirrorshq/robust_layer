@@ -38,7 +38,7 @@ def additional_environ():
 def clone(*args):
     while True:
         try:
-            Util.cmdExecWithStuckCheck(["/usr/bin/git", "clone"] + args, additional_environ())
+            Util.cmdExecWithStuckCheck(["/usr/bin/git", "clone"] + list(args), additional_environ())
             break
         except Util.ProcessStuckError:
             time.sleep(Util.RETRY_TIMEOUT)
@@ -50,11 +50,11 @@ def clone(*args):
 
 
 def pull(*args):
-    assert not any(x not in args for x in ["-r", "--rebase", "--no-rebase"])
+    assert not any(x in ["-r", "--rebase", "--no-rebase"] for x in args)
 
     while True:
         try:
-            Util.cmdExecWithStuckCheck(["/usr/bin/git", "pull", "--rebase"] + args, additional_environ())
+            Util.cmdExecWithStuckCheck(["/usr/bin/git", "pull", "--rebase"] + list(args), additional_environ())
             break
         except Util.ProcessStuckError:
             time.sleep(Util.RETRY_TIMEOUT)
