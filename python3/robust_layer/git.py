@@ -50,12 +50,42 @@ def clone(*args):
             time.sleep(RETRY_WAIT)
 
 
+def fetch(*args):
+    assert not any(x in ["-r", "--rebase", "--no-rebase"] for x in args)
+
+    while True:
+        try:
+            Util.cmdExecWithStuckCheck(["/usr/bin/git", "fetch", "--rebase"] + list(args), additional_environ())
+            break
+        except ProcessStuckError:
+            time.sleep(RETRY_WAIT)
+        except subprocess.CalledProcessError as e:
+            if e.returncode > 128:
+                # terminated by signal, no retry needed
+                raise
+            time.sleep(RETRY_WAIT)
+
+
 def pull(*args):
     assert not any(x in ["-r", "--rebase", "--no-rebase"] for x in args)
 
     while True:
         try:
             Util.cmdExecWithStuckCheck(["/usr/bin/git", "pull", "--rebase"] + list(args), additional_environ())
+            break
+        except ProcessStuckError:
+            time.sleep(RETRY_WAIT)
+        except subprocess.CalledProcessError as e:
+            if e.returncode > 128:
+                # terminated by signal, no retry needed
+                raise
+            time.sleep(RETRY_WAIT)
+
+
+def push(*args):
+    while True:
+        try:
+            Util.cmdExecWithStuckCheck(["/usr/bin/git", "push"] + list(args), additional_environ())
             break
         except ProcessStuckError:
             time.sleep(RETRY_WAIT)
