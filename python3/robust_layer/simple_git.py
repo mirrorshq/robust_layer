@@ -24,12 +24,11 @@
 
 
 import os
-import re
 import time
 import subprocess
 from . import RETRY_WAIT
 from ._util import Util, ProcessStuckError
-from .git import additional_environ, PrivateUrlNotExistError
+from .git import additional_environ, _checkPrivateDomainNotExist
 
 
 def clean(dest_dir):
@@ -58,9 +57,7 @@ def clone(dest_directory, url, quiet=False):
                 raise
 
             # unrecoverable error: private domain name does not exists (see comments in robust_layer.git)
-            m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
-            if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
-                raise PrivateUrlNotExistError()
+            _checkPrivateDomainNotExist(e)
 
             time.sleep(RETRY_WAIT)
 
@@ -107,9 +104,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                     raise
 
                 # unrecoverable error: private domain name does not exists (see comments in robust_layer.git)
-                m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
-                if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
-                    raise PrivateUrlNotExistError()
+                _checkPrivateDomainNotExist(e)
 
                 # switch-to-clone-able error: merge failure
                 if "fatal: refusing to merge unrelated histories" in str(e.stderr):
@@ -136,9 +131,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                     raise
 
                 # unrecoverable error: private domain name does not exists (see comments in robust_layer.git)
-                m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
-                if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
-                    raise PrivateUrlNotExistError()
+                _checkPrivateDomainNotExist(e)
 
                 time.sleep(1.0)
                 continue

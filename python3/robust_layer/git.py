@@ -82,8 +82,16 @@ def _doGitNetOp(cmdList):
             # unrecoverable error: private domain name does not exists
             # we think public domain names are always well maintained, but private domain names are not.
             # always retry for public domain name failure of any reason, abort opertaion when private domain name does not exist
-            m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
-            if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
-                raise PrivateUrlNotExistError()
+            _checkPrivateDomainNotExist(e)
 
             time.sleep(RETRY_WAIT)
+
+
+def _checkPrivateDomainNotExist(e):
+    m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+    if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
+        raise PrivateUrlNotExistError()
+
+    m = re.search("^fatal: unable to access '.*': Could not resolve host: (.*)", e.stderr)
+    if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
+        raise PrivateUrlNotExistError()
