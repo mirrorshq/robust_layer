@@ -6,5 +6,5 @@ import robust_layer.wget
 
 try:
     robust_layer.wget.exec(*sys.argv[1:])
-except subprocess.CalledProcessError:
+except subprocess.CalledProcessError as e:
     sys.exit(e.returncode)
