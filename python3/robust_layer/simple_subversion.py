@@ -32,7 +32,7 @@ from ._util import Util, ProcessStuckError
 
 
 def clean(dest_dir):
-    assert False
+    pass
 
 
 def checkout(dest_directory, url, quiet=False):
