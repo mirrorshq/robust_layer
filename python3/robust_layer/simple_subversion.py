@@ -33,7 +33,8 @@ from ._util import Util, ProcessStuckError, TempChdir
 
 def clean(dest_directory):
     with TempChdir(dest_directory):
-        Util.cmdCall("/usr/bin/svn", "cleanup")
+        Util.cmdCall("/usr/bin/svn", "revert", "--recursive", ".")
+        Util.cmdCall("/usr/bin/svn", "cleanup", "--remove-unversioned")
 
 
 def checkout(dest_directory, url, quiet=False):
