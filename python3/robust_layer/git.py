@@ -70,7 +70,7 @@ class PrivateUrlNotExistError(Exception):
 def _doGitNetOp(cmdList):
     while True:
         try:
-            Util.cmdExec(cmdList, Util.mergeDict(os.environ, additional_environ()))
+            Util.cmdListExec(cmdList, Util.mergeDict(os.environ, additional_environ()))
             break
         except ProcessStuckError:
             time.sleep(RETRY_WAIT)

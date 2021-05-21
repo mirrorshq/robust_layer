@@ -122,7 +122,14 @@ class Util:
         ret.check_returncode()
 
     @staticmethod
-    def cmdExecWithStuckCheck(cmdList, envDict={}, bQuiet=False):
+    def cmdListExec(cmdList, envDict={}, bQuiet=False):
+        ret = subprocess.run(cmdList, universal_newlines=True, env=envDict)
+        if ret.returncode > 128:
+            time.sleep(PARENT_WAIT)
+        ret.check_returncode()
+
+    @staticmethod
+    def cmdListExecWithStuckCheck(cmdList, envDict={}, bQuiet=False):
         # run the process
         proc = subprocess.Popen(cmdList, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 universal_newlines=True, env=envDict)
@@ -142,6 +149,13 @@ class Util:
             print(ret.stdout)
             ret.check_returncode()
         return ret.stdout.rstrip()
+
+    @staticmethod
+    def shellExec(cmd, envDict={}, bQuiet=False):
+        ret = subprocess.run(cmd, shell=True, universal_newlines=True, env=envDict)
+        if ret.returncode > 128:
+            time.sleep(1.0)
+        ret.check_returncode()
 
     @staticmethod
     def shellExecWithStuckCheck(cmd, envDict={}, bQuiet=False):
