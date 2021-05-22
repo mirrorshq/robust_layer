@@ -37,7 +37,7 @@ def exec(*args):
         assert x != "--random-wait"
         assert not re.fullmatch("(-t|--tries|-w|--wait|-T|--timetout)(=.*)?", x)
 
-    Util.cmdListExec(["/usr/bin/wget"] + additional_param() + args)
+    Util.cmdListExec(["/usr/bin/wget"] + additional_param() + list(args))
 
 
 class PrivateUrlNotExistError(Exception):
