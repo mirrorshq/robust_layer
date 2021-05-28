@@ -29,6 +29,7 @@ import socket
 import shutil
 import selectors
 import subprocess
+import ptyprocess
 from . import TIMEOUT
 
 
@@ -129,33 +130,32 @@ class Util:
         #   * caller detects child-process failure and do appopriate treatment
         #   * callee should print termination information
 
-        # FIXME, the above condition is not met, Util.shellExec has the same problem
+        # FIXME, the above condition is not met, FmUtil.shellExec has the same problem
 
-        proc = subprocess.Popen(cmdList, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                universal_newlines=True, env=envDict)
-        Util._communicate(proc, bQuiet)
+        ret = subprocess.run(cmdList, env=envDict, universal_newlines=True)
+        if ret.returncode > 128:
+            time.sleep(1.0)
+        ret.check_returncode()
 
     @staticmethod
-    def cmdListExecWithStuckCheck(cmdList, envDict={}, bQuiet=False):
-        proc = subprocess.Popen(cmdList, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                universal_newlines=True, env=envDict)
+    def cmdListExecWithPtyStuckCheck(cmdList, envDict={}, bQuiet=False):
+        proc = ptyprocess.PtyProcessUnicode.spawn(cmdList, env=envDict)
         Util._communicateWithStuckCheck(proc, bQuiet)
 
     @staticmethod
     def shellExec(cmd, envDict={}, bQuiet=False):
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                shell=True, universal_newlines=True, env=envDict)
-        Util._communicate(proc, bQuiet)
+        ret = subprocess.run(cmd, shell=True, env=envDict, universal_newlines=True)
+        if ret.returncode > 128:
+            time.sleep(1.0)
+        ret.check_returncode()
 
     @staticmethod
-    def shellExecWithStuckCheck(cmd, envDict={}, bQuiet=False):
-        # run the process
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                shell=True, universal_newlines=True, env=envDict)
+    def shellExecWithPtyStuckCheck(cmd, envDict={}, bQuiet=False):
+        proc = ptyprocess.PtyProcessUnicode.spawn(["/bin/sh", "-c", cmd], env=envDict)
         Util._communicateWithStuckCheck(proc, bQuiet)
 
     @staticmethod
-    def _communicate(proc, bQuiet):
+    def _communicate(ptyProc, bQuiet):
         if hasattr(selectors, 'PollSelector'):
             pselector = selectors.PollSelector
         else:
@@ -165,10 +165,8 @@ class Util:
         # make CalledProcessError contain stdout/stderr content
         # terminate the process and raise exception if they stuck
         sStdout = ""
-        sStderr = ""
         with pselector() as selector:
-            selector.register(proc.stdout, selectors.EVENT_READ)
-            selector.register(proc.stderr, selectors.EVENT_READ)
+            selector.register(ptyProc, selectors.EVENT_READ)
             while selector.get_map():
                 res = selector.select(TIMEOUT)
                 for key, events in res:
@@ -176,24 +174,16 @@ class Util:
                     if not data:
                         selector.unregister(key.fileobj)
                         continue
-                    if key.fileobj == proc.stdout:
-                        sStdout += data
-                        sys.stdout.write(data)
-                    elif key.fileobj == proc.stderr:
-                        sStderr += data
-                        sys.stderr.write(data)
-                    else:
-                        assert False
+                    sStdout += data
+                    sys.stdout.write(data)
 
-        proc.communicate()
-
-        if proc.returncode > 128:
+        if os.WIFSIGNALED(ptyProc.returncode):
             time.sleep(PARENT_WAIT)
-        if proc.returncode:
-            raise subprocess.CalledProcessError(proc.returncode, proc.args, sStdout, sStderr)
+        if ptyProc.returncode:
+            raise subprocess.CalledProcessError(ptyProc.returncode, ptyProc.args, sStdout, "")
 
     @staticmethod
-    def _communicateWithStuckCheck(proc, bQuiet):
+    def _communicateWithStuckCheck(ptyProc, bQuiet):
         if hasattr(selectors, 'PollSelector'):
             pselector = selectors.PollSelector
         else:
@@ -206,38 +196,38 @@ class Util:
         sStderr = ""
         bStuck = False
         with pselector() as selector:
-            selector.register(proc.stdout, selectors.EVENT_READ)
-            selector.register(proc.stderr, selectors.EVENT_READ)
+            selector.register(ptyProc.stdout, selectors.EVENT_READ)
+            selector.register(ptyProc.stderr, selectors.EVENT_READ)
             while selector.get_map():
                 res = selector.select(TIMEOUT)
                 if res == []:
                     bStuck = True
                     if not bQuiet:
                         sys.stderr.write("Process stuck for %d second(s), terminated.\n" % (TIMEOUT))
-                    proc.terminate()
+                    ptyProc.terminate()
                     break
                 for key, events in res:
                     data = key.fileobj.read()
                     if not data:
                         selector.unregister(key.fileobj)
                         continue
-                    if key.fileobj == proc.stdout:
+                    if key.fileobj == ptyProc.stdout:
                         sStdout += data
                         sys.stdout.write(data)
-                    elif key.fileobj == proc.stderr:
+                    elif key.fileobj == ptyProc.stderr:
                         sStderr += data
                         sys.stderr.write(data)
                     else:
                         assert False
 
-        proc.communicate()
+        ptyProc.communicate()
 
-        if proc.returncode > 128:
+        if ptyProc.returncode > 128:
             time.sleep(PARENT_WAIT)
         if bStuck:
-            raise ProcessStuckError(proc.args, TIMEOUT)
-        if proc.returncode:
-            raise subprocess.CalledProcessError(proc.returncode, proc.args, sStdout, sStderr)
+            raise ProcessStuckError(ptyProc.args, TIMEOUT)
+        if ptyProc.returncode:
+            raise subprocess.CalledProcessError(ptyProc.returncode, ptyProc.args, sStdout, sStderr)
 
     @staticmethod
     def domainNameIsPrivate(domainName):

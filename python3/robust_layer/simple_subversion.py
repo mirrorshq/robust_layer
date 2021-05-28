@@ -47,7 +47,7 @@ def checkout(dest_directory, url, quiet=False):
     while True:
         try:
             cmd = "/usr/bin/svn checkout %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
-            Util.shellExecWithStuckCheck(cmd, {}, quiet)
+            Util.shellExec(cmd, {}, quiet)
             break
         except ProcessStuckError:
             time.sleep(RETRY_WAIT)
@@ -89,7 +89,7 @@ def update(dest_directory, recheckout_on_failure=False, url=None, quiet=False):
             try:
                 with TempChdir(dest_directory):
                     cmd = "/usr/bin/svn update %s" % (quietArg)
-                    Util.shellExecWithStuckCheck(cmd, {}, quiet)
+                    Util.shellExec(cmd, {}, quiet)
                 break
             except ProcessStuckError:
                 time.sleep(1.0)
@@ -101,7 +101,7 @@ def update(dest_directory, recheckout_on_failure=False, url=None, quiet=False):
             Util.forceDelete(dest_directory)
             try:
                 cmd = "/usr/bin/svn checkout %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
-                Util.shellExecWithStuckCheck(cmd, {}, quiet)
+                Util.shellExec(cmd, {}, quiet)
                 break
             except subprocess.CalledProcessError as e:
                 if e.returncode > 128:
