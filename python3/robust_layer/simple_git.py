@@ -107,7 +107,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
                 _checkPrivateDomainNotExist(e)
 
                 # switch-to-clone-able error: merge failure
-                if "fatal: refusing to merge unrelated histories" in str(e.stderr):
+                if "fatal: refusing to merge unrelated histories" in str(e.stdout):
                     if not reclone_on_failure:
                         raise
                     mode = "clone"

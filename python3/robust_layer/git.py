@@ -88,10 +88,10 @@ def _doGitNetOp(cmdList):
 
 
 def _checkPrivateDomainNotExist(e):
-    m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stderr)
+    m = re.search("^fatal: unable to access '.*': Couldn't resolve host '(.*)'", e.stdout)
     if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
         raise PrivateUrlNotExistError()
 
-    m = re.search("^fatal: unable to access '.*': Could not resolve host: (.*)", e.stderr)
+    m = re.search("^fatal: unable to access '.*': Could not resolve host: (.*)", e.stdout)
     if m is not None and Util.domainNameIsPrivate(m.group(1)) and Util.domainNameNotExist(m.group(1)):
         raise PrivateUrlNotExistError()
