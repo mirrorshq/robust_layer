@@ -47,7 +47,7 @@ def clone(dest_directory, url, quiet=False):
     while True:
         try:
             cmd = "/usr/bin/git clone %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
-            Util.shellExec(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
+            Util.shellPtyExec(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
             break
         except ProcessStuckError:
             time.sleep(RETRY_WAIT)
@@ -93,7 +93,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
             clean(dest_directory)
             try:
                 cmd = "/usr/bin/git -C \"%s\" pull --rebase --no-stat %s" % (dest_directory, quietArg)
-                Util.shellExec(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
+                Util.shellPtyExec(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
                 break
             except ProcessStuckError:
                 time.sleep(1.0)
@@ -120,7 +120,7 @@ def pull(dest_directory, reclone_on_failure=False, url=None, quiet=False):
             Util.forceDelete(dest_directory)
             try:
                 cmd = "/usr/bin/git clone %s \"%s\" \"%s\"" % (quietArg, url, dest_directory)
-                Util.shellExec(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
+                Util.shellPtyExec(cmd, Util.mergeDict(os.environ, additional_environ()), quiet)
                 break
             except ProcessStuckError:
                 time.sleep(1.0)

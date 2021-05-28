@@ -32,7 +32,7 @@ from ._util import Util
 def exec(*args):
     while True:
         try:
-            Util.cmdListExec(["/usr/bin/rsync", "--timeout=%d" % (TIMEOUT)] + list(args))
+            Util.cmdListPtyExec(["/usr/bin/rsync", "--timeout=%d" % (TIMEOUT)] + list(args))
             break
         except subprocess.CalledProcessError as e:
             if e.returncode > 128:
