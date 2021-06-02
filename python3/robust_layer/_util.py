@@ -150,26 +150,14 @@ class Util:
 
     @staticmethod
     def _communicate(proc):
-        if hasattr(selectors, 'PollSelector'):
-            pselector = selectors.PollSelector
-        else:
-            pselector = selectors.SelectSelector
-
-        # redirect proc.stdout/proc.stderr to stdout/stderr
-        # make CalledProcessError contain stdout/stderr content
+        # from nonblock_read() in https://github.com/kata198/python-nonblock/blob/HEAD/nonblock/read.py
+        # python sucks at non-block I/O
         sStdout = b''
-        with pselector() as selector:
-            selector.register(proc.stdout, selectors.EVENT_READ)
-            while selector.get_map():
-                res = selector.select(TIMEOUT)
-                for key, events in res:
-                    data = key.fileobj.read(1)
-                    if data == b'':
-                        selector.unregister(key.fileobj)
-                        continue
-                    sStdout += data
-                    sys.stdout.buffer.write(data)
-                    sys.stdout.flush()
+        c = proc.stdout.read(1)
+        while c != b'':
+            sStdout += c
+            sys.stdout.buffer.write(c)
+            c = proc.stdout.read(1)
 
         retcode = proc.wait()
         if retcode > 128:
@@ -193,12 +181,13 @@ class Util:
                 res = selector.select(TIMEOUT)
                 for key, events in res:
                     try:
-                        data = key.fileobj.read()
+                        data = key.fileobj.read(1)
                     except EOFError:
                         selector.unregister(key.fileobj)
                         continue
                     sStdout += data
                     sys.stdout.write(data)
+                    sys.stdout.flush()
 
         ptyProc.wait()
         if ptyProc.signalstatus is not None:
@@ -230,12 +219,13 @@ class Util:
                     break
                 for key, events in res:
                     try:
-                        data = key.fileobj.read()
+                        data = key.fileobj.read(1)
                     except EOFError:
                         selector.unregister(key.fileobj)
                         continue
                     sStdout += data
                     sys.stdout.write(data)
+                    sys.stdout.flush()
 
         ptyProc.wait()
         if ptyProc.signalstatus is not None:
