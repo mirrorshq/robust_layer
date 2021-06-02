@@ -130,7 +130,7 @@ class Util:
         Util._communicate(proc)
 
     @staticmethod
-    def cmdListPtyExec(cmdList, envDict=None, bQuiet=False):
+    def cmdListPtyExec(cmdList, envDict=None):
         proc = ptyprocess.PtyProcessUnicode.spawn(cmdList, env=envDict)
         Util._communicateWithPty(proc)
 
@@ -140,7 +140,7 @@ class Util:
         Util._communicateWithPtyStuckCheck(proc, bQuiet)
 
     @staticmethod
-    def shellPtyExec(cmd, envDict=None, bQuiet=False):
+    def shellPtyExec(cmd, envDict=None):
         proc = ptyprocess.PtyProcessUnicode.spawn(["/bin/sh", "-c", cmd], env=envDict)
         Util._communicateWithPty(proc)
 
