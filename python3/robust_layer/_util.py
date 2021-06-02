@@ -119,14 +119,13 @@ class Util:
     def shellExec(cmd, envDict=None):
         proc = subprocess.Popen(cmd, env=envDict,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                shell=True, universal_newlines=True)
+                                shell=True)
         Util._communicate(proc)
 
     @staticmethod
     def cmdListExec(cmdList, envDict=None):
         proc = subprocess.Popen(cmdList, env=envDict,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                universal_newlines=True)
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         Util._communicate(proc)
 
     @staticmethod
@@ -158,24 +157,25 @@ class Util:
 
         # redirect proc.stdout/proc.stderr to stdout/stderr
         # make CalledProcessError contain stdout/stderr content
-        sStdout = ""
+        sStdout = b''
         with pselector() as selector:
             selector.register(proc.stdout, selectors.EVENT_READ)
             while selector.get_map():
                 res = selector.select(TIMEOUT)
                 for key, events in res:
                     data = key.fileobj.read()
-                    if data == "":
+                    if data == b'':
                         selector.unregister(key.fileobj)
                         continue
                     sStdout += data
-                    sys.stdout.write(data)
+                    sys.stdout.buffer.write(data)
+                    sys.stdout.flush()
 
         retcode = proc.wait()
         if retcode > 128:
             time.sleep(PARENT_WAIT)
         if retcode != 0:
-            raise subprocess.CalledProcessError(retcode, proc.args, sStdout, "")
+            raise subprocess.CalledProcessError(retcode, proc.args, sStdout.decode(sys.stdout.encoding), "")
 
     @staticmethod
     def _communicateWithPty(ptyProc):
