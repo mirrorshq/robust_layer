@@ -32,9 +32,7 @@ from ._util import Util, ProcessStuckError
 def exec(*args):
     while True:
         try:
-            # rsync can stuck when:
-            # 1. local ip changed
-            Util.cmdListExecWithStuckCheck(["/usr/bin/rsync", "--timeout=%d" % (TIMEOUT)] + list(args))
+            Util.cmdListExec(["/usr/bin/rsync", "--timeout=%d" % (TIMEOUT)] + list(args))
             break
         except ProcessStuckError:
             time.sleep(RETRY_WAIT)
